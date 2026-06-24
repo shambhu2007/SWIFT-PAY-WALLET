@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Swift Pay Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Modern Font for Premium Look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f0f9ff; color: #0f172a; -webkit-tap-highlight-color: transparent; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Splash Screen Elements */
+        #splash-screen { position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; background-color: #f0f9ff; }
+        .dark-mode #splash-screen { background-color: #0f172a; }
+        .logo-circle { width: 140px; height: 140px; border-radius: 50%; background: #ffffff; padding: 15px; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); animation: pulse-glow 2s infinite; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .dark-mode .logo-circle { background: #1e293b; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+        .logo-circle img { width: 100%; height: 100%; object-fit: contain; animation: float 3s ease-in-out infinite; }
+        
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.5); } 70% { box-shadow: 0 0 0 25px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        /* Dark Theme Overrides */
+        body.dark-mode { background-color: #0f172a; color: #f8fafc; }
+        .dark-mode .bg-\[\#f0f9ff\] { background-color: #0f172a !important; }
+        .dark-mode .bg-white { background-color: #1e293b !important; }
+        .dark-mode .sky-card { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5) !important; }
+        .dark-mode .sky-input, .dark-mode .sky-select, .dark-mode textarea.sky-input { background: #0f172a !important; border-color: #334155 !important; color: #f8fafc !important; }
+        .dark-mode .text-slate-900, .dark-mode .text-slate-800 { color: #f8fafc !important; }
+        .dark-mode .text-slate-700, .dark-mode .text-slate-600 { color: #cbd5e1 !important; }
+        .dark-mode .text-slate-500, .dark-mode .text-slate-400 { color: #94a3b8 !important; }
+        .dark-mode .bg-slate-50, .dark-mode .bg-slate-100 { background-color: #0f172a !important; }
+        .dark-mode .border-slate-100, .dark-mode .border-slate-200 { border-color: #334155 !important; }
+        .dark-mode #sidebar { background-color: #1e293b !important; }
+        .dark-mode .shadow-sm { box-shadow: none !important; }
+        .dark-mode .shadow-sky-200 { box-shadow: 0 10px 30px -5px rgba(0,0,0,0.6) !important; } 
+        .dark-mode .bg-white\/20 { opacity: 0.05 !important; } 
+
+        /* Premium UI Classes & Animations */
+        .sky-card { background: #ffffff; border-radius: 24px; box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.1); border: 1px solid rgba(224, 242, 254, 0.6); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sky-card:hover { transform: translateY(-2px); box-shadow: 0 15px 35px -10px rgba(14, 165, 233, 0.2); }
+        .dark-mode .sky-card:hover { box-shadow: 0 15px 35px -10px rgba(0,0,0,0.6) !important; }
+
+        .sky-input { width: 100%; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; font-weight: 600; font-size: 15px; color: #0f172a; outline: none; transition: all 0.3s ease; }
+        .sky-input:focus { border-color: #0ea5e9; background: transparent; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15); }
+        .sky-select { width: 100%; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; font-weight: 600; font-size: 15px; color: #0f172a; outline: none; appearance: none; }
+        
+        .sky-btn { width: 100%; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; font-weight: 800; padding: 18px; border-radius: 16px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 20px -6px rgba(14, 165, 233, 0.4); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: none; }
+        .sky-btn:active { transform: translateY(2px) scale(0.98); box-shadow: 0 4px 10px -6px rgba(14, 165, 233, 0.4); }
+        .sky-btn:hover { box-shadow: 0 12px 25px -6px rgba(14, 165, 233, 0.5); }
+        
+        .tap:active { transform: scale(0.92); transition: transform 0.1s; }
+        
+        /* Smooth Screen Transitions */
+        .app-screen { display: none; min-height: 100vh; width: 100%; padding-bottom: 50px; }
+        .app-screen.active { display: block; animation: fadeSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes fadeSlideUp { 0% { opacity: 0; transform: translateY(30px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* Receipt Modal Styles (Screenshot Match) */
+        .receipt-field-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 12px; text-align: left; transition: 0.3s; }
+        .dark-mode .receipt-field-card { background: #0f172a; border-color: #1e293b; }
+        .receipt-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .receipt-value { font-size: 14px; font-weight: 700; color: #0f172a; word-break: break-all; }
+        .dark-mode .receipt-value { color: #f8fafc; }
+
+        /* Loader & Toasts */
+        #global-loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; }
+        .dark-mode #global-loader { background: rgba(15, 23, 42, 0.95); }
+        #global-loader.active { display: flex; }
+        .spinner { width: 50px; height: 50px; border: 4px solid #e0f2fe; border-top: 4px solid #0ea5e9; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+    </style>
+    <script>
+        if(localStorage.getItem('wallet_theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+        window.allTxns = []; // Global store for receipts to prevent quoting bugs
+    </script>
+</head>
+<body class="max-w-md mx-auto relative bg-[#f0f9ff]" onload="initTheme()">
+
+<div id="splash-screen">
+    <div class="logo-circle">
+        <img src="logo.png" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2830/2830284.png'">
+    </div>
+    <h1 class="text-4xl font-black mt-8 tracking-tighter uppercase transition-colors duration-300" style="background: linear-gradient(135deg, #0ea5e9, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Swift Pay</h1>
+    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-2 animate-pulse">Secure Wallet</p>
+</div>
+
+<div id="toast-container"></div>
+<div id="global-loader">
+    <div class="spinner"></div>
+    <p class="mt-4 text-sky-600 font-bold text-xs uppercase tracking-widest animate-pulse">Processing...</p>
+</div>
+
+<div id="auth-screen" class="app-screen p-6 bg-white z-[999] active" style="display: block;">
+    <div class="flex flex-col justify-center min-h-[90vh]">
+        <div class="text-center mb-10">
+            <div class="w-24 h-24 bg-sky-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 text-sky-500 shadow-inner border border-sky-100"><i class="fa-solid fa-wallet"></i></div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">Swift Pay</h1>
+            <p class="text-xs text-slate-500 font-bold mt-2 tracking-widest uppercase">Wallet App</p>
+        </div>
+        <div class="sky-card p-8">
+            <div class="space-y-4">
+                <div class="relative flex items-center">
+                    <span class="absolute left-5 text-slate-400 font-bold border-r border-slate-200 pr-3">+91</span>
+                    <input type="number" id="login-phone" placeholder="Mobile Number" class="sky-input pl-[4.5rem]" oninput="if(this.value.length>10)this.value=this.value.slice(0,10);">
+                </div>
+                <input type="password" id="login-pass" placeholder="Password" class="sky-input">
+                <button onclick="handleLogin()" class="sky-btn mt-6">Login to Wallet</button>
+            </div>
+            <div class="text-center mt-6">
+                <p class="text-sm text-slate-500">Don't have an account?</p>
+                <button onclick="showScreen('register-screen')" class="text-sky-600 font-bold mt-1 tap block mx-auto">Create an account</button>
+                <div class="border-t border-slate-200 my-4"></div>
+                <button onclick="showScreen('admin-login-screen')" class="text-slate-600 font-bold mt-3 text-xs tap block mx-auto">Admin Panel <i class="fa-solid fa-shield ml-1"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="register-screen" class="app-screen p-6 bg-white z-[999]">
+    <div class="flex flex-col justify-center min-h-[90vh]">
+        <div class="text-center mb-10">
+            <div class="w-24 h-24 bg-sky-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 text-sky-500 shadow-inner border border-sky-100"><i class="fa-solid fa-user-plus"></i></div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">Sign Up</h1>
+            <p class="text-xs text-slate-500 font-bold mt-2 tracking-widest uppercase">Instant Setup</p>
+        </div>
+        <div class="sky-card p-8">
+            <div class="space-y-4">
+                <input type="text" id="reg-name" placeholder="Full Name" class="sky-input">
+                <div class="relative flex items-center">
+                    <span class="absolute left-5 text-slate-400 font-bold border-r border-slate-200 pr-3">+91</span>
+                    <input type="number" id="reg-phone" placeholder="Mobile Number" class="sky-input pl-[4.5rem]" oninput="if(this.value.length>10)this.value=this.value.slice(0,10);">
+                </div>
+                <input type="password" id="reg-pass" placeholder="Password" class="sky-input">
+                <input type="password" id="reg-pin" placeholder="4-Digit PIN" maxlength="4" class="sky-input text-center tracking-[1em]">
+
+                <button onclick="handleRegister()" class="sky-btn mt-6">Create Account</button>
+            </div>
+            <div class="text-center mt-6">
+                <button onclick="showScreen('auth-screen')" class="text-slate-500 font-bold mt-1 tap block mx-auto">Back to Login</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN LOGIN SCREEN -->
+<div id="admin-login-screen" class="app-screen p-6 bg-white z-[999]">
+    <div class="flex flex-col justify-center min-h-[90vh]">
+        <div class="text-center mb-10">
+            <div class="w-24 h-24 bg-red-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 text-red-500 shadow-inner border border-red-100"><i class="fa-solid fa-shield"></i></div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">Admin Panel</h1>
+            <p class="text-xs text-slate-500 font-bold mt-2 tracking-widest uppercase">Secure Access</p>
+        </div>
+        <div class="sky-card p-8">
+            <div class="space-y-4">
+                <div class="relative flex items-center">
+                    <span class="absolute left-5 text-slate-400 font-bold border-r border-slate-200 pr-3">+91</span>
+                    <input type="number" id="admin-phone" placeholder="Admin Phone" class="sky-input pl-[4.5rem]" oninput="if(this.value.length>10)this.value=this.value.slice(0,10);">
+                </div>
+                <input type="password" id="admin-pass" placeholder="Admin Password" class="sky-input">
+                <button onclick="handleAdminLogin()" class="sky-btn mt-6 bg-red-500 hover:bg-red-600">Login to Admin</button>
+            </div>
+            <div class="text-center mt-6">
+                <button onclick="showScreen('auth-screen')" class="text-slate-500 font-bold mt-1 tap block mx-auto">Back to Login</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN PANEL SCREEN -->
+<div id="admin-panel-screen" class="app-screen p-6 bg-white z-[999]">
+    <header class="p-6 pt-10 flex justify-between items-center bg-[#f0f9ff] sticky top-0 z-50">
+        <div>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Admin Control</p>
+            <h1 class="text-sm font-black text-red-600 tracking-tight">Management Panel</h1>
+        </div>
+        <button onclick="handleAdminLogout()" class="bg-red-100 text-red-600 font-bold px-4 py-2 rounded-xl text-xs tap"><i class="fa-solid fa-sign-out"></i> Logout</button>
+    </header>
+
+    <div class="px-6 space-y-6 pb-20">
+        <!-- DEPOSITS SECTION -->
+        <div class="sky-card p-6">
+            <h2 class="text-lg font-black text-slate-900 mb-4 flex items-center gap-2"><i class="fa-solid fa-plus-circle text-emerald-500"></i> Pending Deposits</h2>
+            <div id="deposits-list" class="space-y-3 max-h-96 overflow-y-auto">
+                <p class="text-sm text-slate-500 text-center py-8">Loading deposits...</p>
+            </div>
+        </div>
+
+        <!-- WITHDRAWALS SECTION -->
+        <div class="sky-card p-6">
+            <h2 class="text-lg font-black text-slate-900 mb-4 flex items-center gap-2"><i class="fa-solid fa-arrow-down-circle text-orange-500"></i> Pending Withdrawals</h2>
+            <div id="withdrawals-list" class="space-y-3 max-h-96 overflow-y-auto">
+                <p class="text-sm text-slate-500 text-center py-8">Loading withdrawals...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main-dashboard" class="app-screen">
+    <header class="p-6 pt-10 flex justify-between items-center bg-[#f0f9ff] sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <div onclick="document.getElementById('sidebar').classList.remove('-translate-x-full')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center tap cursor-pointer shadow-sm border border-slate-200"><i class="fa-solid fa-bars-staggered text-slate-700 text-lg"></i></div>
+            <div>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Welcome back,</p>
+                <h1 id="dash-user-name" class="text-sm font-black text-slate-900 truncate w-32">User</h1>
+            </div>
+        </div>
+        <div onclick="showScreen('profile-screen')" class="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 tap cursor-pointer overflow-hidden border border-sky-200">
+             <img id="dash-profile-pic" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=0ea5e9&textColor=ffffff" class="w-full h-full object-cover">
+        </div>
+    </header>
+
+    <div class="px-6 space-y-6">
+        <div class="bg-gradient-to-br from-[#0ea5e9] to-[#0284c7] p-8 rounded-[2rem] shadow-2xl shadow-sky-200 relative overflow-hidden transform transition hover:scale-[1.02] duration-300">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl -mr-10 -mt-10"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full blur-xl -ml-5 -mb-5"></div>
+            <div class="relative z-10">
+                <div class="flex justify-between items-center mb-6">
+                    <p class="text-[10px] font-bold text-sky-100 uppercase tracking-widest opacity-90">Total Balance</p>
+                    <i class="fa-solid fa-wallet text-sky-200 text-xl"></i>
+                </div>
+                <h1 id="main-balance" class="text-4xl font-black text-white mb-8 tracking-tight">₹0.00</h1>
+                <div class="flex gap-4">
+                    <button onclick="showScreen('add-fund')" class="flex-1 bg-white text-sky-600 font-bold py-3.5 rounded-2xl text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 tap shadow-lg hover:bg-sky-50"><i class="fa-solid fa-plus"></i> Deposit</button>
+                    <button onclick="showScreen('withdraw-screen')" class="flex-1 bg-sky-600 border border-sky-400 text-white font-bold py-3.5 rounded-2xl text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 tap shadow-lg hover:bg-sky-700"><i class="fa-solid fa-arrow-down"></i> Withdraw</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-3 pt-2">
+            <div onclick="showScreen('add-fund')" class="sky-card p-4 flex flex-col items-center justify-center gap-3 tap cursor-pointer">
+                <div class="w-12 h-12 bg-sky-50 rounded-full flex items-center justify-center text-sky-500 text-xl"><i class="fa-solid fa-plus"></i></div>
+                <p class="text-[10px] font-bold text-slate-700">Add</p>
+            </div>
+            <div onclick="showScreen('withdraw-screen')" class="sky-card p-4 flex flex-col items-center justify-center gap-3 tap cursor-pointer">
+                <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 text-xl"><i class="fa-solid fa-building-columns"></i></div>
+                <p class="text-[10px] font-bold text-slate-700">Out</p>
+            </div>
+            <div onclick="showScreen('pay-screen')" class="sky-card p-4 flex flex-col items-center justify-center gap-3 tap cursor-pointer">
+                <div class="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center text-purple-500 text-xl"><i class="fa-solid fa-paper-plane"></i></div>
+                <p class="text-[10px] font-bold text-slate-700">Send</p>
+            </div>
+            <div onclick="showScreen('history-screen')" class="sky-card p-4 flex flex-col items-center justify-center gap-3 tap cursor-pointer">
+                <div class="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-500 text-xl"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <p class="text-[10px] font-bold text-slate-700">History</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div onclick="showScreen('claim-screen')" class="sky-card p-6 flex items-center gap-4 tap cursor-pointer">
+                <div class="w-12 h-12 bg-pink-50 rounded-full flex items-center justify-center text-pink-500 text-xl"><i class="fa-solid fa-gift"></i></div>
+                <div><h3 class="font-bold text-slate-800 text-sm">Gifts</h3><p class="text-[9px] text-slate-400 font-bold uppercase">VIP Codes</p></div>
+            </div>
+            <div onclick="document.getElementById('bulk-balance-display').innerText = '₹' + (window.currentUser?.balance||0); showScreen('bulk-screen');" class="sky-card p-6 flex items-center gap-4 tap cursor-pointer">
+                <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 text-xl"><i class="fa-solid fa-layer-group"></i></div>
+                <div><h3 class="font-bold text-slate-800 text-sm">Bulk</h3><p class="text-[9px] text-slate-400 font-bold uppercase">Multi Pay</p></div>
+            </div>
+        </div>
+
+        <div onclick="openStatistics()" class="sky-card p-5 border-l-4 border-l-purple-500 flex items-center justify-between tap cursor-pointer mt-4">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-purple-50 rounded-full flex items-center justify-center"><i class="fa-solid fa-chart-pie text-purple-500 text-xl"></i></div>
+                <div>
+                    <span class="text-sm font-black text-slate-900 block mb-0.5 uppercase tracking-wide">Statistics</span>
+                    <span class="text-[10px] font-bold text-slate-500">View Account Activity</span>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+        </div>
+
+        <div onclick="showScreen('lifafa-manager-screen'); loadMyLifafas();" class="sky-card p-5 border-l-4 border-l-red-500 flex items-center justify-between tap cursor-pointer mt-4 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center"><i class="fa-solid fa-envelope-open-text text-red-500 text-xl"></i></div>
+                <div>
+                    <span class="text-sm font-black text-slate-900 block mb-0.5 uppercase tracking-wide">Lifafa System</span>
+                    <span class="text-[10px] font-bold text-slate-500">Create & Share Giveaways</span>
+                </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+        </div>
+    </div>
+</div>
+
+<div id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white z-[1000] shadow-2xl transform -translate-x-full transition-transform duration-300">
+    <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <h2 class="font-black text-xl text-sky-600 tracking-tight">Swift Pay</h2>
+        <div onclick="document.getElementById('sidebar').classList.add('-translate-x-full')" class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 cursor-pointer tap hover:bg-slate-100 transition"><i class="fa-solid fa-xmark"></i></div>
+    </div>
+    <div class="p-6 space-y-2">
+        <div onclick="showScreen('profile-screen')" class="p-4 rounded-2xl flex items-center gap-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-50 tap transition"><i class="fa-solid fa-user text-sky-500 w-5 text-xl"></i> Profile</div>
+        <div onclick="toggleTheme()" class="p-4 rounded-2xl flex items-center gap-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-50 tap transition"><i class="fa-solid fa-moon text-indigo-500 w-5 text-xl"></i> Change Theme</div>
+        <div onclick="showScreen('api-screen')" class="p-4 rounded-2xl flex items-center gap-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-50 tap transition"><i class="fa-solid fa-code text-purple-500 w-5 text-xl"></i> Developer API</div>
+        <div onclick="showScreen('pin-screen')" class="p-4 rounded-2xl flex items-center gap-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-50 tap transition"><i class="fa-solid fa-lock text-emerald-500 w-5 text-xl"></i> Change PIN</div>
+        
+        <hr class="my-4 border-slate-100 dark:border-slate-800">
+        
+        <div onclick="window.open('https://t.me/SwiftPaywallet_official', '_blank')" class="p-4 rounded-2xl flex items-center gap-4 text-sm font-bold text-sky-600 cursor-pointer hover:bg-slate-50 tap transition"><i class="fa-brands fa-telegram w-5 text-xl"></i> Join Channel</div>
+        
+        <div onclick="window.open('tg://openmessage?user_id=8156429182', '_blank')" class="p-4 rounded-2xl flex items-center gap-4 text-sm font-bold text-orange-500 cursor-pointer hover:bg-slate-50 tap transition"><i class="fa-solid fa-headset w-5 text-xl"></i> Support</div>
+        
+        <div onclick="localStorage.clear(); location.href = location.origin;" class="p-4 rounded-2xl flex items-center gap-4 text-sm font-bold text-red-500 cursor-pointer mt-4 hover:bg-red-50 tap transition"><i class="fa-solid fa-right-from-bracket w-5 text-xl"></i> Logout</div>
+    </div>
+</div>
+
+<div id="statistics-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Statistics</h2>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div class="sky-card p-6 flex flex-col items-center justify-center text-center">
+            <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 text-xl mb-3"><i class="fa-solid fa-arrow-down-up-lock"></i></div>
+            <h3 class="text-2xl font-black text-slate-900" id="stat-total-credit">₹0</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Total Credit</p>
+        </div>
+        <div class="sky-card p-6 flex flex-col items-center justify-center text-center">
+            <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 text-xl mb-3"><i class="fa-solid fa-money-bill-transfer"></i></div>
+            <h3 class="text-2xl font-black text-slate-900" id="stat-total-txn">0</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Transactions</p>
+        </div>
+        <div class="sky-card p-6 flex flex-col items-center justify-center text-center">
+            <div class="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center text-purple-500 text-xl mb-3"><i class="fa-solid fa-check-double"></i></div>
+            <h3 class="text-2xl font-black text-slate-900" id="stat-success-rate">0%</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Success Rate</p>
+        </div>
+        <div class="sky-card p-6 flex flex-col items-center justify-center text-center">
+            <div class="w-12 h-12 bg-sky-50 rounded-full flex items-center justify-center text-sky-500 text-xl mb-3"><i class="fa-solid fa-thumbs-up"></i></div>
+            <h3 class="text-2xl font-black text-slate-900" id="stat-total-success">0</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Total Success</p>
+        </div>
+    </div>
+    
+    <div class="mt-8">
+        <h3 class="text-sm font-black text-slate-800 mb-4 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-sky-500"></i> History Log</h3>
+        <div id="stat-history-list" class="space-y-4 pb-10"></div>
+    </div>
+</div>
+
+<div id="add-fund" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Deposit</h2>
+    </div>
+    
+    <div class="sky-card p-6 mb-6 text-center border-t-4 border-t-sky-500">
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Scan QR to Pay</p>
+        <div class="bg-white p-3 rounded-2xl mx-auto w-48 h-48 shadow-lg mb-6 border border-slate-100">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=admin@upi" id="dep-qr-img" class="w-full h-full rounded-xl">
+        </div>
+        <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-2xl">
+            <h3 id="user-deposit-upi" class="text-sm font-bold text-slate-700 truncate pl-4">admin@upi</h3>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('user-deposit-upi').innerText); alert('UPI ID Copied!');" class="bg-sky-100 text-sky-600 w-12 h-12 rounded-xl flex items-center justify-center tap hover:bg-sky-200 transition"><i class="fa-regular fa-copy"></i></button>
+        </div>
+    </div>
+
+    <div class="sky-card p-6">
+        <h4 class="text-sm font-black text-slate-800 mb-5 flex items-center gap-2"><i class="fa-solid fa-file-invoice text-sky-500"></i> Payment Details</h4>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">12-Digit UTR Number</label>
+                <input type="text" id="dep-utr" placeholder="e.g. 312456789012" maxlength="12" class="sky-input">
+            </div>
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Amount Paid (₹)</label>
+                <input type="number" id="dep-amt" placeholder="₹0.00" class="sky-input">
+            </div>
+            <button onclick="currentTask='DEPOSIT'; document.getElementById('pin-modal').classList.remove('hidden'); document.getElementById('pin-modal').classList.add('flex');" class="sky-btn mt-4"><i class="fa-solid fa-cloud-arrow-up"></i> Submit Request</button>
+        </div>
+    </div>
+</div>
+
+<div id="pin-modal" class="fixed inset-0 bg-slate-900/80 z-[5000] hidden items-center justify-center p-6 backdrop-blur-sm">
+    <div class="sky-card w-full max-w-sm p-8 text-center border-0 animate-fadeSlideUp">
+        <div class="w-14 h-14 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4 text-sky-500"><i class="fa-solid fa-lock text-xl"></i></div>
+        <h3 class="text-sm font-bold text-slate-600 uppercase tracking-widest mb-6">Enter Security PIN</h3>
+        <input id="input-pin" type="password" readonly placeholder="••••" class="w-full bg-slate-50 p-6 mb-8 text-center text-4xl font-black text-slate-900 rounded-2xl outline-none tracking-[0.5em] border border-slate-200">
+        <div class="grid grid-cols-3 gap-3">
+            <button onclick="document.getElementById('input-pin').value+='1'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">1</button>
+            <button onclick="document.getElementById('input-pin').value+='2'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">2</button>
+            <button onclick="document.getElementById('input-pin').value+='3'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">3</button>
+            <button onclick="document.getElementById('input-pin').value+='4'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">4</button>
+            <button onclick="document.getElementById('input-pin').value+='5'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">5</button>
+            <button onclick="document.getElementById('input-pin').value+='6'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">6</button>
+            <button onclick="document.getElementById('input-pin').value+='7'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">7</button>
+            <button onclick="document.getElementById('input-pin').value+='8'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">8</button>
+            <button onclick="document.getElementById('input-pin').value+='9'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">9</button>
+            <button onclick="document.getElementById('input-pin').value=''" class="h-16 bg-red-50 text-red-500 rounded-2xl text-xl font-black tap transition hover:bg-red-100">C</button>
+            <button onclick="document.getElementById('input-pin').value+='0'" class="h-16 bg-slate-50 rounded-2xl text-xl font-bold text-slate-700 tap hover:bg-slate-100 transition">0</button>
+            <button onclick="handlePIN()" class="h-16 sky-btn rounded-2xl text-xl font-bold tap m-0 p-0 w-full transition"><i class="fa-solid fa-check"></i></button>
+        </div>
+        <button onclick="document.getElementById('pin-modal').classList.add('hidden'); document.getElementById('pin-modal').classList.remove('flex'); document.getElementById('input-pin').value='';" class="mt-8 text-sm font-bold text-slate-400 hover:text-slate-600 transition">Cancel</button>
+    </div>
+</div>
+
+<div id="withdraw-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Withdraw</h2>
+    </div>
+    <div class="sky-card p-6 flex justify-between items-center mb-6">
+        <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Available Funds</span>
+            <span id="withdraw-avail-bal" class="text-3xl font-black text-emerald-500">₹0.00</span> 
+        </div>
+        <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center"><i class="fa-solid fa-building-columns text-2xl"></i></div>
+    </div>
+    <div class="sky-card p-6 space-y-5">
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Your UPI ID</label>
+            <input id="withdraw-upi" type="text" placeholder="yourname@upi" class="sky-input">
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Amount (Min ₹20)</label>
+            <input id="withdraw-amt" type="number" placeholder="₹0.00" class="sky-input">
+        </div>
+        <button onclick="currentTask='WITHDRAW'; document.getElementById('pin-modal').classList.remove('hidden'); document.getElementById('pin-modal').classList.add('flex');" class="sky-btn !bg-slate-900 !shadow-slate-900/30 mt-4"><i class="fa-solid fa-building-columns"></i> Request Payout</button>
+    </div>
+</div>
+
+<div id="pay-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Send Money</h2>
+    </div>
+    <div class="sky-card p-6 space-y-5">
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Receiver Mobile</label>
+            <input id="pay-phone" oninput="checkReceiver(this.value)" type="number" placeholder="10-Digit Mobile" class="sky-input">
+            <div id="receiver-name-display" class="text-[10px] font-black ml-2 hidden mt-2"></div>
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Amount (₹)</label>
+            <input id="pay-amt" type="number" placeholder="₹0.00" class="sky-input">
+        </div>
+        <button onclick="currentTask='PAY'; document.getElementById('pin-modal').classList.remove('hidden'); document.getElementById('pin-modal').classList.add('flex');" class="sky-btn mt-4"><i class="fa-solid fa-paper-plane"></i> Send Securely</button>
+    </div>
+</div>
+
+<div id="bulk-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Bulk Send</h2>
+    </div>
+    <div class="sky-card p-6 flex justify-between items-center mb-6">
+        <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Available Balance</span>
+            <span id="bulk-balance-display" class="text-3xl font-black text-sky-500">₹0.00</span> 
+        </div>
+        <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><i class="fa-solid fa-layer-group text-2xl"></i></div>
+    </div>
+    <div class="sky-card p-6 space-y-5">
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Recipients (One per line)</label>
+            <textarea id="bulk-numbers" rows="5" placeholder="9876543210&#10;9123456789" class="sky-input resize-none"></textarea>
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Amount Per User (₹)</label>
+            <input id="bulk-amount" type="number" placeholder="₹0.00" class="sky-input">
+        </div>
+        <button onclick="processBulkSend()" class="sky-btn mt-4"><i class="fa-solid fa-layer-group"></i> Send To All</button>
+    </div>
+</div>
+
+<div id="api-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Developer API</h2>
+    </div>
+    <div class="bg-red-50 border border-red-100 rounded-2xl p-5 flex gap-4 items-start mb-6">
+        <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl mt-1"></i>
+        <div>
+            <h3 class="text-xs font-black text-red-700 uppercase tracking-widest mb-1">Security Warning</h3>
+            <p class="text-[10px] font-bold text-red-600 leading-relaxed">Never share your API key. It allows direct deduction from your wallet.</p>
+        </div>
+    </div>
+    <div class="sky-card p-6 mb-6">
+        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">Your Secret API Key</span>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex justify-between items-center mb-6">
+            <span class="user-api-key-text font-mono text-sm font-bold text-sky-600">LOADING...</span>
+            <button onclick="copyApiText()" class="text-slate-400 hover:text-sky-600 tap text-lg transition"><i class="fa-regular fa-copy"></i></button>
+        </div>
+        <button onclick="generateUserApiKey()" class="sky-btn !bg-slate-800 !shadow-slate-800/30 text-xs"><i class="fa-solid fa-rotate"></i> Regenerate Key</button>
+    </div>
+    <div class="sky-card p-6">
+        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-4">API URL (Auto Payment)</span>
+        <div class="bg-slate-800 p-5 rounded-2xl">
+            <p class="text-[11px] font-mono text-slate-300 break-all leading-relaxed">
+                https://swift-pay-wallet.vercel.app/api/pay?key=<span class="text-emerald-400" id="api-url-key">{Api_key}</span>&paytm=<span class="text-yellow-400">{number}</span>&amount=<span class="text-yellow-400">{amount}</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<div id="history-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Transactions</h2>
+    </div>
+    <div class="bg-white p-2 rounded-2xl flex mb-6 gap-1 overflow-x-auto shadow-sm border border-slate-100 sticky top-0 z-10">
+        <button onclick="switchHistoryTab('ALL')" id="tab-all" class="flex-1 bg-sky-500 text-white font-bold py-3 px-3 rounded-xl text-[10px] transition uppercase tracking-widest">ALL</button>
+        <button onclick="switchHistoryTab('DEP')" id="tab-dep" class="flex-1 text-slate-500 font-bold py-3 px-3 rounded-xl text-[10px] transition hover:bg-slate-50 bg-transparent uppercase tracking-widest">DEP</button>
+        <button onclick="switchHistoryTab('WITH')" id="tab-with" class="flex-1 text-slate-500 font-bold py-3 px-3 rounded-xl text-[10px] transition hover:bg-slate-50 bg-transparent uppercase tracking-widest">WITH</button>
+        <button onclick="switchHistoryTab('TXN')" id="tab-txn" class="flex-1 text-slate-500 font-bold py-3 px-3 rounded-xl text-[10px] transition hover:bg-slate-50 bg-transparent uppercase tracking-widest">OTHER</button>
+    </div>
+    <div id="history-list" class="space-y-4 pb-10"></div>
+</div>
+
+<div id="receipt-modal" class="fixed inset-0 bg-slate-900/70 z-[6000] hidden flex-col items-center justify-end sm:justify-center backdrop-blur-sm transition-all duration-300">
+    <div class="bg-white dark:bg-[#0f172a] w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative shadow-2xl animate-fadeSlideUp max-h-[90vh] overflow-y-auto border border-slate-100 dark:border-slate-800">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-black text-slate-900 dark:text-white">Transaction Details</h2>
+            <button onclick="closeReceiptModal()" class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 tap hover:bg-slate-200 transition"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="mb-6 border-b border-slate-100 dark:border-slate-800 pb-6 text-center">
+            <p id="rcpt-title" class="text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">Payment to ...</p>
+            <p id="rcpt-date" class="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-4 uppercase tracking-widest">19 May 2026, 07:21 PM</p>
+            <h1 id="rcpt-amt" class="text-4xl font-black tracking-tighter mb-4 text-red-500">-₹30.00</h1>
+            <span id="rcpt-status" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest"><i class="fa-solid fa-circle-check"></i> Success</span>
+        </div>
+
+        <div class="space-y-3">
+            <div class="receipt-field-card flex justify-between items-center">
+                <div class="flex-1 overflow-hidden pr-2">
+                    <div class="receipt-label">Transaction ID</div>
+                    <div id="rcpt-id" class="receipt-value font-mono text-xs truncate">STG-123456789</div>
+                </div>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('rcpt-id').innerText); alert('Copied!');" class="text-slate-400 hover:text-sky-500 tap p-2 bg-slate-100 dark:bg-slate-800 rounded-lg transition"><i class="fa-regular fa-copy"></i></button>
+            </div>
+
+            <div class="receipt-field-card">
+                <div class="receipt-label">Payment Method</div>
+                <div id="rcpt-method" class="receipt-value flex items-center gap-2 text-sm"><i class="fa-solid fa-money-bill-transfer text-sky-500"></i> Transfer</div>
+            </div>
+
+            <div class="receipt-field-card">
+                <div class="receipt-label">Category</div>
+                <div id="rcpt-category" class="receipt-value capitalize text-sm">transfer</div>
+            </div>
+            
+            <div class="receipt-field-card" id="rcpt-notes-card">
+                <div class="receipt-label" id="rcpt-notes-title">Details</div>
+                <div id="rcpt-notes" class="receipt-value text-sm font-medium">...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="profile-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">My Profile</h2>
+    </div>
+    
+    <div class="flex flex-col items-center text-center space-y-4 mb-6 mt-2 relative">
+        <div class="w-28 h-28 bg-gradient-to-tr from-sky-400 to-indigo-500 rounded-[2.5rem] p-1 shadow-xl animate-fadeSlideUp">
+            <div class="w-full h-full bg-white dark:bg-slate-800 rounded-[2.2rem] flex items-center justify-center text-5xl text-sky-500 overflow-hidden">
+                <img id="profile-pic" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=0ea5e9&textColor=ffffff" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="space-y-1 animate-fadeSlideUp" style="animation-delay: 0.1s;">
+            <h2 id="profile-name-display" class="font-black text-2xl text-slate-900 dark:text-white">...</h2>
+            <p id="profile-phone-display" class="text-sky-600 font-bold text-sm bg-sky-50 dark:bg-slate-800 border border-sky-100 dark:border-slate-700 px-4 py-1.5 rounded-full inline-block mt-2 tracking-widest"></p>
+        </div>
+    </div>
+    
+    <div class="sky-card p-5 mb-6 space-y-4 animate-fadeSlideUp" style="animation-delay: 0.2s;">
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-3">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Telegram ID</span>
+            <span id="profile-tg-display" class="font-black text-slate-800 dark:text-white text-sm">Not Linked</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-3">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Joined Date</span>
+            <span id="profile-joined-display" class="font-black text-slate-800 dark:text-white text-sm">...</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Account Status</span>
+            <span class="font-black text-emerald-500 text-sm flex items-center gap-1"><i class="fa-solid fa-shield-check"></i> Active</span>
+        </div>
+    </div>
+
+    <div class="sky-card p-6 animate-fadeSlideUp" style="animation-delay: 0.3s;">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Edit Full Name</label>
+        <input type="text" id="edit-name-input" class="sky-input mb-5" placeholder="Enter Name">
+        <button onclick="updateProfileName()" class="sky-btn text-xs">Update Profile</button>
+    </div>
+</div>
+
+<div id="pin-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Change PIN</h2>
+    </div>
+    <div class="sky-card p-8 text-center mt-6">
+        <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-6"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3 class="font-black text-slate-800 text-lg mb-6">Setup New Security PIN</h3>
+        <input id="new-pin-val" type="password" maxlength="4" placeholder="••••" class="sky-input mb-6 text-center text-3xl tracking-[1em]">
+        <button onclick="updatePIN()" class="sky-btn !bg-emerald-500 !shadow-emerald-500/30 text-xs hover:!bg-emerald-600">Update PIN</button>
+    </div>
+</div>
+
+<div id="claim-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Gift Codes</h2>
+    </div>
+    <div class="space-y-6">
+        <div class="sky-card p-6 text-center">
+            <div class="h-16 w-16 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-4 text-pink-500"><i class="fa-solid fa-gift text-2xl"></i></div>
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Redeem VIP Code</h3>
+            <p class="text-[10px] text-slate-500 font-bold mb-5 mt-1">Enter code to get free funds</p>
+            <input type="text" id="claim-input" placeholder="CODE-XXXX" class="sky-input text-center text-lg uppercase tracking-[4px] mb-5">
+            <button onclick="handleClaimCode()" class="sky-btn !bg-pink-500 !shadow-pink-500/30 text-[11px] hover:!bg-pink-600">Claim Reward</button>
+        </div>
+        <div class="sky-card p-6 text-center">
+            <div class="h-16 w-16 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-4 text-sky-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl"></i></div>
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Create Gift Code</h3>
+            <div class="space-y-4 mb-6 mt-4 text-left">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Amount per user (₹)</label>
+                    <input type="number" id="create-code-amount" placeholder="0.00" class="sky-input">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 mb-2 block">Number of users</label>
+                    <input type="number" id="create-code-users" placeholder="e.g. 10" class="sky-input">
+                </div>
+            </div>
+            <button onclick="handleCreateCode()" class="sky-btn text-[11px]">Generate Code</button>
+            <div id="generated-code-box" class="hidden mt-6 p-4 bg-sky-50 rounded-2xl border border-dashed border-sky-200">
+                <p class="text-[10px] font-bold text-sky-600 uppercase tracking-widest mb-1">Your Code:</p>
+                <p id="new-code-text" class="text-xl font-black text-sky-700 tracking-[3px] select-all"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="lifafa-manager-screen" class="app-screen p-6">
+    <div class="flex items-center mb-8 pt-4">
+        <button onclick="showScreen('main-dashboard')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 tap hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+        <h2 class="ml-4 font-black text-slate-900 text-2xl">Lifafa System</h2>
+    </div>
+
+    <div class="bg-white p-2 rounded-2xl flex shadow-sm mb-6 gap-1 border border-slate-100 dark:bg-[#1e293b] dark:border-slate-800">
+        <button onclick="toggleLifafaTab('CREATE')" id="l-tab-create" class="flex-1 bg-red-500 text-white font-bold py-3 px-2 rounded-xl text-[10px] transition tracking-widest uppercase">Create New</button>
+        <button onclick="toggleLifafaTab('LIST')" id="l-tab-list" class="flex-1 text-slate-500 font-bold py-3 px-2 rounded-xl text-[10px] transition hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent tracking-widest uppercase">My Lifafas</button>
+    </div>
+
+    <div id="lifafa-create-sec" class="space-y-4">
+        <div class="sky-card p-6">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Telegram Links (Req)</label>
+            <div id="tg-inputs-container" class="space-y-3 mb-2">
+                <input type="text" placeholder="https://t.me/yourchannel" class="tg-link-input sky-input">
+            </div>
+            <button type="button" onclick="addTgInput()" class="text-xs font-bold text-sky-600 mt-3 mb-6 block bg-sky-50 dark:bg-slate-800 px-4 py-2 rounded-xl">+ Add Channel</button>
+            
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Unique Code (Optional)</label>
+            <input id="l-code" type="text" placeholder="Leave empty if none" class="sky-input mb-6">
+            
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Lifafa Type</label>
+            <select id="l-type" onchange="switchLifafaInputs()" class="sky-input mb-6 bg-white dark:bg-[#0f172a] appearance-none">
+                <option value="STANDARD">Standard (Fixed Amount)</option>
+                <option value="SCRATCH">Scratch Card (Random Range)</option>
+                <option value="TOSS">Coin Toss (Win/Lose condition)</option>
+            </select>
+
+            <div id="l-input-standard" class="mb-6">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Amount Per User (₹)</label>
+                <input id="l-std-amt" type="number" placeholder="e.g. 5" class="sky-input">
+            </div>
+
+            <div id="l-input-scratch" class="mb-6 hidden grid-cols-2 gap-3">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Min (₹)</label>
+                    <input id="l-scr-min" type="number" placeholder="1" class="sky-input">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Max (₹)</label>
+                    <input id="l-scr-max" type="number" placeholder="10" class="sky-input">
+                </div>
+            </div>
+
+            <div id="l-input-toss" class="mb-6 hidden space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Winning Amount (₹)</label>
+                    <input id="l-toss-amt" type="number" placeholder="e.g. 10" class="sky-input">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Winning Side</label>
+                    <select id="l-toss-win" class="sky-input bg-white dark:bg-[#0f172a] appearance-none">
+                        <option value="HEAD">Head</option>
+                        <option value="TAIL">Tail</option>
+                    </select>
+                </div>
+            </div>
+
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 block mb-2">Total Users Limit</label>
+            <input id="l-users" type="number" placeholder="e.g. 20" class="sky-input mb-8">
+            
+            <button onclick="handleCreateLifafa()" class="sky-btn !bg-red-500 !shadow-red-500/30 text-xs hover:!bg-red-600"><i class="fa-solid fa-bolt"></i> Create Giveaway</button>
+            
+            <div id="l-generated-link" class="hidden mt-6 p-5 bg-red-50 dark:bg-slate-800 rounded-2xl border border-dashed border-red-200 dark:border-slate-700 text-center">
+                <p class="text-[10px] font-bold text-red-800 dark:text-red-400 uppercase tracking-widest mb-2">Share this link:</p>
+                <a id="l-link-text" href="#" class="text-sm font-black text-red-600 dark:text-red-400 block mb-4 break-all"></a>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('l-link-text').href); alert('Link Copied!');" class="bg-white dark:bg-slate-700 text-red-600 dark:text-white text-xs px-4 py-2.5 rounded-lg font-bold shadow-sm border border-red-100 dark:border-slate-600 tap transition"><i class="fa-regular fa-copy"></i> Copy Link</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lifafa-list-sec" class="hidden space-y-4 min-h-[300px] pb-10"></div>
+</div>
+
+<div id="claim-lifafa-screen" class="app-screen fixed inset-0 bg-red-50 dark:bg-slate-900 p-6 flex flex-col items-center justify-center z-[5000] overflow-y-auto">
+    <div class="w-full max-w-sm bg-white dark:bg-[#1e293b] p-8 rounded-[2.5rem] shadow-2xl border border-red-100 dark:border-slate-800 text-center relative mt-10">
+        <div class="w-20 h-20 bg-red-50 dark:bg-slate-800 text-red-500 rounded-full flex items-center justify-center text-4xl mx-auto -mt-16 mb-4 border-4 border-white dark:border-[#1e293b] shadow-sm"><i class="fa-solid fa-gift"></i></div>
+        
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wide">You got a Lifafa!</h1>
+        <p id="claim-type-desc" class="text-[10px] text-slate-500 font-bold mt-2 mb-6 bg-slate-100 dark:bg-slate-800 py-1.5 px-4 rounded-full inline-block tracking-widest uppercase">Fetching Details...</p>
+
+        <div id="claim-steps-container" class="space-y-4 text-left hidden">
+            <div class="p-5 bg-sky-50 dark:bg-slate-800 rounded-2xl border border-sky-100 dark:border-slate-700">
+                <label class="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest block mb-3"><i class="fa-brands fa-telegram"></i> Step 1: Join Channel(s)</label>
+                <div id="dynamic-tg-buttons" class="space-y-2"></div>
+            </div>
+
+            <div class="p-5 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-3">Step 2: Verification</label>
+                <div id="claim-code-div" class="mb-3 hidden">
+                    <input id="claim-code" type="text" placeholder="Unique Access Code" class="sky-input text-center tracking-widest">
+                </div>
+                <div>
+                    <input id="claim-phone" type="number" placeholder="Wallet Mobile (10 Digits)" class="sky-input text-center">
+                </div>
+            </div>
+
+            <button onclick="proceedLifafaClaim()" class="sky-btn !bg-red-500 !shadow-red-500/30 text-xs mt-4 hover:!bg-red-600">Open Lifafa</button>
+        </div>
+
+        <div id="claim-game-container" class="hidden py-6">
+            <div id="game-scratch" class="hidden">
+                <p class="text-xs font-bold text-slate-500 mb-4 uppercase tracking-widest">Scratch to reveal prize!</p>
+                <button onclick="executeFinalClaim()" class="w-full bg-orange-500 text-white font-black py-5 rounded-2xl uppercase tracking-widest text-lg shadow-lg animate-bounce">Reveal My Reward</button>
+            </div>
+
+            <div id="game-toss" class="hidden">
+                <p class="text-xs font-bold text-slate-500 mb-6 uppercase tracking-widest">A coin will be tossed!</p>
+                <div id="coin-ui" class="w-24 h-24 bg-yellow-400 rounded-full mx-auto flex items-center justify-center border-4 border-yellow-500 shadow-xl mb-8 text-yellow-700 font-black text-3xl">?</div>
+                <button onclick="playTossGame()" class="w-full bg-yellow-500 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-sm shadow-lg tap">Toss Coin</button>
+            </div>
+        </div>
+
+        <div id="claim-result-container" class="hidden py-6">
+            <h2 id="claim-result-msg" class="text-2xl font-black text-slate-900 dark:text-white tracking-tight"></h2>
+            <p id="claim-result-amt" class="text-5xl font-black text-emerald-500 my-6 hidden">₹0</p>
+            <button onclick="location.href=location.origin" class="mt-4 text-xs font-bold text-slate-400 hover:text-slate-500 uppercase tracking-widest tap transition">Go to Homepage</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = "/api/backend"; 
+
+let currentUser = null;
+let currentTask = '';
+let currentHistoryTab = 'ALL';
+
+let activeLifafaData = null; 
+let tgJoined = false;
+let joinedTgIndices = new Set(); 
+
+const loader = (show) => {
+    const el = document.getElementById('global-loader');
+    if(show) { el.classList.add('active'); }
+    else { el.classList.remove('active'); }
+};
+
+async function apiCall(action, payload) {
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: action, data: payload }),
+            signal: controller.signal
+        });
+        clearTimeout(timeout);
+        
+        const json = await res.json();
+        console.log("API Response:", action, json);
+        if (!res.ok || json.error) throw new Error(json.error || "Server Error");
+        return json.data;
+    } catch (e) {
+        console.error("API Error:", action, e);
+        throw e;
+    }
+}
+
+function initTheme() {
+    if(localStorage.getItem('wallet_theme') === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark-mode');
+    localStorage.setItem('wallet_theme', isDark ? 'dark' : 'light');
+}
+
+function showScreen(id) {
+    document.querySelectorAll('.app-screen').forEach(s => { 
+        s.classList.remove('active'); 
+        s.style.display = 'none'; 
+    });
+    
+    const target = document.getElementById(id);
+    if(target) { 
+        target.style.display = 'block';
+        void target.offsetWidth; 
+        target.classList.add('active'); 
+    }
+    
+    const sidebar = document.getElementById('sidebar');
+    if(sidebar) sidebar.classList.add('-translate-x-full');
+    
+    if(id === 'history-screen') loadHistory();
+    
+    if(id === 'profile-screen' && currentUser) {
+        document.getElementById('profile-name-display').innerText = currentUser.name || "User";
+        document.getElementById('profile-phone-display').innerText = currentUser.phone;
+        document.getElementById('edit-name-input').value = currentUser.name || "";
+        document.getElementById('profile-tg-display').innerText = currentUser.tgId || "Not Linked";
+        
+        let joinDate = "N/A";
+        if(currentUser.joinedAt) {
+            const jd = new Date(currentUser.joinedAt);
+            joinDate = jd.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+        document.getElementById('profile-joined-display').innerText = joinDate;
+        document.getElementById('profile-pic').src = `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}&backgroundColor=0ea5e9&textColor=ffffff`;
+    }
+    
+    if(id === 'api-screen' && currentUser) {
+        const key = currentUser.apiKey || "NO_KEY_GENERATED_YET";
+        document.querySelectorAll('.user-api-key-text').forEach(el => el.innerText = key);
+        document.getElementById('api-url-key').innerText = key; 
+    }
+}
+
+async function openStatistics() {
+    showScreen('statistics-screen');
+    document.getElementById('stat-total-credit').innerText = "Loading...";
+    document.getElementById('stat-total-txn').innerText = "...";
+    document.getElementById('stat-success-rate').innerText = "...";
+    document.getElementById('stat-total-success').innerText = "...";
+    const statListArea = document.getElementById('stat-history-list');
+    statListArea.innerHTML = `<p class="text-center text-xs text-sky-500 py-10 animate-pulse font-bold uppercase tracking-widest">Loading Records...</p>`;
+
+    try {
+        const stats = await apiCall('STATISTICS', { phone: currentUser.phone });
+        document.getElementById('stat-total-credit').innerText = `₹${stats.totalCredit}`;
+        document.getElementById('stat-total-txn').innerText = stats.totalTxns;
+        document.getElementById('stat-success-rate').innerText = `${stats.successRate}%`;
+        document.getElementById('stat-total-success').innerText = stats.successTxns;
+
+        let txns = await apiCall('HISTORY', { phone: currentUser.phone });
+        if(!txns || txns.length===0) {
+            statListArea.innerHTML = `<div class="text-center py-10"><p class="text-xs text-slate-400 font-bold uppercase tracking-widest">No Records Found</p></div>`;
+        } else {
+            txns.sort((a, b) => b.timestamp - a.timestamp);
+            window.allTxns = txns;
+            statListArea.innerHTML = txns.map(renderTxnHTML).join('');
+        }
+    } catch(e) {
+        alert("Failed to fetch statistics.");
+        statListArea.innerHTML = `<div class="text-center py-10"><p class="text-xs text-red-400 font-bold uppercase tracking-widest">Error Loading History</p></div>`;
+    }
+}
+
+async function handleLogin() {
+    const phone = document.getElementById('login-phone').value.trim();
+    const pass = document.getElementById('login-pass').value.trim();
+    if (!phone || !pass) return alert("Fill all fields!");
+    if (phone.length !== 10) return alert("Enter valid 10-digit mobile!");
+    
+    loader(true);
+    try {
+        const user = await apiCall('LOGIN', { phone: "+91"+phone, password: pass });
+        localStorage.setItem('ultra_user', JSON.stringify(user));
+        currentUser = user;
+        startSync();
+        showScreen('main-dashboard');
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function sendTgOtp() {
+    const tgId = document.getElementById('reg-tg-id').value.trim();
+    if(!tgId) return alert("Please enter TG User ID first!");
+    loader(true);
+    try {
+        await apiCall('SEND_OTP', { tgId: tgId });
+        alert("OTP sent! Please check the Alert Bot.");
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function handleRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const pass = document.getElementById('reg-pass').value.trim();
+    const pin = document.getElementById('reg-pin').value.trim();
+    
+    if (!name || !phone || !pass || !pin) return alert("Fill all required fields!");
+    if (phone.length !== 10) return alert("Enter valid 10-digit mobile!");
+    if (pin.length !== 4) return alert("PIN must be 4 digits!");
+    if (pass.length < 6) return alert("Password must be at least 6 characters!");
+
+    loader(true);
+    try {
+        const user = await apiCall('REGISTER', { name, phone: "+91"+phone, password: pass, pin });
+        localStorage.setItem('ultra_user', JSON.stringify(user));
+        currentUser = user;
+        startSync();
+        showScreen('main-dashboard');
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+let syncTimer = null;
+function startSync() {
+    if(!currentUser) return;
+    if(syncTimer) clearInterval(syncTimer);
+    
+    const fetchSync = async () => {
+        try {
+            const result = await apiCall('SYNC', { phone: currentUser.phone });
+            const u = result.user;
+            const config = result.config || {};
+
+            if(config.maintenance) {
+                alert("System is under maintenance! Please try again later.");
+                localStorage.clear();
+                location.reload();
+                return;
+            }
+
+            if(u.banned) {
+                alert("Your account has been banned by the Administrator.");
+                localStorage.clear();
+                location.reload();
+                return;
+            }
+
+            currentUser = u;
+            localStorage.setItem('ultra_user', JSON.stringify(u));
+            
+            document.getElementById('main-balance').innerText = "₹" + (Number(u.balance)||0).toFixed(2);
+            document.getElementById('dash-user-name').innerText = u.name;
+            document.getElementById('dash-profile-pic').src = `https://api.dicebear.com/7.x/initials/svg?seed=${u.name}&backgroundColor=0ea5e9&textColor=ffffff`;
+            
+            if(document.getElementById('withdraw-avail-bal')) document.getElementById('withdraw-avail-bal').innerText = "₹" + (Number(u.balance)||0).toFixed(2);
+            if(document.getElementById('pay-avail-bal')) document.getElementById('pay-avail-bal').innerText = "₹" + (Number(u.balance)||0).toFixed(2);
+            
+            if(config.upiId) {
+                const uiEl = document.getElementById('user-deposit-upi');
+                if(uiEl && uiEl.innerText !== config.upiId) {
+                    uiEl.innerText = config.upiId;
+                    const qrEl = document.getElementById('dep-qr-img');
+                    if(qrEl) qrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=${config.upiId}`;
+                }
+            }
+        } catch(e) {}
+    };
+    fetchSync(); 
+    syncTimer = setInterval(fetchSync, 3000); 
+}
+
+async function updateProfileName() {
+    const name = document.getElementById('edit-name-input').value;
+    if(name.length < 3) return alert("Min 3 characters required!");
+    loader(true);
+    try {
+        await apiCall('UPDATE_PROFILE', { phone: currentUser.phone, name });
+        alert("Updated Successfully!");
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function updatePIN() {
+    const pin = document.getElementById('new-pin-val').value;
+    if(pin.length !== 4) return alert("Must be 4 digits!");
+    loader(true);
+    try {
+        await apiCall('UPDATE_PIN', { phone: currentUser.phone, pin });
+        alert("PIN Updated!"); showScreen('main-dashboard');
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function checkReceiver(val) {
+    const display = document.getElementById('receiver-name-display');
+    if(val.length === 10) {
+        try {
+            const name = await apiCall('CHECK_RECEIVER', { phone: "+91"+val });
+            display.innerText = "Receiver: " + name;
+            display.className = "text-[10px] text-emerald-600 font-bold mt-2 block";
+        } catch(e) {
+            display.innerText = "User Not Found!";
+            display.className = "text-[10px] text-red-500 font-bold mt-2 block";
+        }
+    } else { display.className = "hidden"; }
+}
+
+async function handlePIN() {
+    const val = document.getElementById('input-pin').value;
+    
+    document.getElementById('pin-modal').classList.add('hidden');
+    document.getElementById('pin-modal').classList.remove('flex');
+    document.getElementById('input-pin').value = "";
+    
+    if (val !== currentUser.pin) return alert("Incorrect PIN!");
+
+    try {
+        if(currentTask === 'DEPOSIT') {
+            const amt = Number(document.getElementById('dep-amt').value);
+            const utr = document.getElementById('dep-utr').value.trim();
+            if(amt <= 0) return alert("Enter a valid amount!");
+            if(utr.length !== 12) return alert("Enter valid 12-digit UTR!");
+            
+            loader(true);
+            await apiCall('DEPOSIT', { phone: currentUser.phone, name: currentUser.name, amount: amt, utr: utr });
+            alert("Deposit Request Sent!"); showScreen('main-dashboard');
+        }
+        else if(currentTask === 'WITHDRAW') {
+            const amt = Number(document.getElementById('withdraw-amt').value);
+            const upi = document.getElementById('withdraw-upi').value.trim();
+            
+            if(amt < 20) return alert("Minimum withdrawal amount is ₹20!");
+            if(amt > (currentUser.balance || 0)) return alert("Insufficient Balance!");
+            if(!upi) return alert("Enter valid UPI ID!");
+
+            loader(true);
+            await apiCall('WITHDRAW', { phone: currentUser.phone, name: currentUser.name, amount: amt, upi: upi });
+            alert("Withdraw Request Sent!"); showScreen('main-dashboard');
+        }
+        else if(currentTask === 'PAY') {
+            const amt = Number(document.getElementById('pay-amt').value);
+            let receiver = document.getElementById('pay-phone').value.trim();
+            
+            if(amt <= 0) return alert("Enter a valid amount!");
+            if(amt > (currentUser.balance || 0)) return alert("Insufficient Balance!");
+            
+            if(receiver.length === 10) receiver = "+91" + receiver;
+            if(receiver === currentUser.phone) return alert("You cannot send money to yourself!");
+
+            loader(true);
+            await apiCall('PAY', { sender: currentUser.phone, receiver: receiver, amount: amt });
+            alert("Transfer Successful!"); showScreen('main-dashboard');
+        }
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function processBulkSend() {
+    const numbers = document.getElementById('bulk-numbers').value.split('\n').map(n => n.trim().length===10 ? "+91"+n.trim() : n.trim()).filter(n=>n);
+    const amount = Number(document.getElementById('bulk-amount').value);
+    
+    if(!amount || amount <= 0 || numbers.length===0) return alert("Invalid details provided!");
+    
+    const totalCost = amount * numbers.length;
+    if(totalCost > (currentUser.balance || 0)) return alert(`Insufficient Balance! Total needed: ₹${totalCost}`);
+
+    if(!confirm(`Send ₹${amount} to ${numbers.length} users? (Total: ₹${totalCost})`)) return;
+
+    loader(true);
+    try {
+        await apiCall('BULK_PAY', { sender: currentUser.phone, receivers: numbers, amount });
+        alert("Bulk Send Complete!"); showScreen('main-dashboard');
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function handleCreateCode() {
+    const amt = Number(document.getElementById('create-code-amount').value);
+    const users = Number(document.getElementById('create-code-users').value);
+    
+    if(!amt || amt <= 0 || !users || users <= 0) return alert("Enter valid amount and users!");
+    const totalCost = amt * users;
+    if(totalCost > (currentUser.balance || 0)) return alert("Insufficient Balance!");
+
+    loader(true);
+    try {
+        const code = await apiCall('CREATE_GIFT', { phone: currentUser.phone, amount: amt, usersCount: users });
+        document.getElementById('generated-code-box').classList.remove('hidden');
+        document.getElementById('new-code-text').innerText = code;
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function handleClaimCode() {
+    const code = document.getElementById('claim-input').value.trim().toUpperCase();
+    if(!code) return alert("Please enter a code!");
+
+    loader(true);
+    try {
+        const amt = await apiCall('CLAIM_GIFT', { phone: currentUser.phone, code: code });
+        alert(`Claimed ₹${amt} successfully!`); showScreen('main-dashboard');
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function generateUserApiKey() {
+    if(!confirm("Generate new API Key? Old one will be invalid.")) return;
+    loader(true);
+    try {
+        const key = await apiCall('GENERATE_API', { phone: currentUser.phone });
+        document.querySelectorAll('.user-api-key-text').forEach(el => el.innerText = key);
+        document.getElementById('api-url-key').innerText = key;
+        currentUser.apiKey = key;
+        localStorage.setItem('ultra_user', JSON.stringify(currentUser));
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+function copyApiText() {
+    navigator.clipboard.writeText(currentUser.apiKey); alert("Copied!");
+}
+
+function switchHistoryTab(tab) {
+    currentHistoryTab = tab;
+    ['ALL', 'DEP', 'WITH', 'TXN'].forEach(t => {
+        const btn = document.getElementById(`tab-${t.toLowerCase()}`);
+        if(btn) {
+            if(t === tab) {
+                btn.className = "flex-1 bg-sky-500 text-white font-bold py-3 px-3 rounded-xl text-[10px] transition uppercase tracking-widest";
+            } else {
+                btn.className = "flex-1 text-slate-500 font-bold py-3 px-3 rounded-xl text-[10px] transition hover:bg-slate-50 bg-transparent uppercase tracking-widest";
+            }
+        }
+    });
+    loadHistory();
+}
+
+// BUG-FREE RECEIPT LOGIC using global array
+window.openReceiptModal = function(txnId) {
+    const txn = window.allTxns.find(t => t.id === txnId);
+    if(!txn) return;
+    
+    let isCredit = (txn.isCredit === 'true' || txn.isCredit === true);
+    let sign = isCredit ? "+" : "-";
+    
+    document.getElementById('rcpt-title').innerText = txn.title;
+    document.getElementById('rcpt-date').innerText = txn.date;
+    
+    const amtEl = document.getElementById('rcpt-amt');
+    amtEl.innerText = sign + "₹" + txn.amount;
+    amtEl.className = isCredit ? "text-4xl font-black tracking-tighter mb-4 text-emerald-500" : "text-4xl font-black tracking-tighter mb-4 text-red-500";
+    
+    const statusEl = document.getElementById('rcpt-status');
+    if (txn.status === 'PENDING') {
+        statusEl.innerHTML = '<i class="fa-solid fa-clock"></i> Pending';
+        statusEl.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-widest";
+    } else if (txn.status === 'REJECTED') {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Rejected';
+        statusEl.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-widest";
+    } else {
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Success';
+        statusEl.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest";
+    }
+
+    document.getElementById('rcpt-id').innerText = txn.id;
+    
+    let method = "Wallet";
+    let icon = "fa-wallet";
+    let category = "App Transaction";
+
+    if(txn.type === 'DEP') { method = "Deposit"; icon = "fa-cloud-arrow-up"; category = "Deposit"; }
+    else if(txn.type === 'WITH') { method = "Withdraw"; icon = "fa-building-columns"; category = "Withdraw"; }
+    else if(txn.type === 'TXN') { 
+        method = "Transfer"; 
+        icon = "fa-money-bill-transfer"; 
+        category = isCredit ? "Received" : "Transfer"; 
+    }
+
+    document.getElementById('rcpt-method').innerHTML = `<i class="fa-solid ${icon} text-sky-500"></i> ${method}`;
+    document.getElementById('rcpt-category').innerText = category;
+    
+    const notesCard = document.getElementById('rcpt-notes-card');
+    const notesContent = document.getElementById('rcpt-notes');
+    const notesTitle = document.getElementById('rcpt-notes-title');
+    
+    if(txn.info) {
+        notesCard.style.display = 'block';
+        notesContent.innerText = txn.info;
+        
+        // Smart parse information to determine if its a code, UPI, or comment
+        if(txn.info.includes("Code:")) notesTitle.innerText = "GIFT CODE";
+        else if(txn.info.includes("From:") || txn.info.includes("To:")) notesTitle.innerText = "SENDER / RECEIVER";
+        else notesTitle.innerText = "NOTES / DETAILS";
+        
+    } else {
+        notesCard.style.display = 'none';
+    }
+
+    const modal = document.getElementById('receipt-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+window.closeReceiptModal = function() {
+    const modal = document.getElementById('receipt-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function renderTxnHTML(data) {
+    let isCredit = data.isCredit;
+    let title = data.title;
+    let sign = isCredit ? "+" : "-";
+    let color = isCredit ? "text-emerald-500" : "text-slate-800";
+    let bgIcon = isCredit ? "bg-emerald-50 text-emerald-500" : "bg-slate-50 border border-slate-100 text-slate-600";
+    let arrow = isCredit ? "fa-arrow-down" : "fa-arrow-up";
+    
+    let statusText = data.status || "SUCCESS"; 
+    let statusColor = "text-emerald-500";
+
+    if (data.status === 'PENDING') {
+        statusText = "Pending"; statusColor = "text-orange-500"; color = "text-orange-600"; sign = ""; 
+    } else if (data.status === 'REJECTED') {
+        statusText = "Rejected"; statusColor = "text-red-500";
+        if (data.type === 'WITH') { isCredit = true; sign = "+"; color = "text-emerald-500"; bgIcon = "bg-emerald-50 text-emerald-500"; arrow = "fa-arrow-down"; title = "Withdraw Rejected (Refund)"; } 
+        else if (data.type === 'DEP') { isCredit = false; sign = ""; color = "text-slate-400"; bgIcon = "bg-red-50 text-red-500"; title = "Deposit Rejected"; }
+    }
+
+    let shortDate = data.date.split(',')[0];
+    let extraInfo = data.info ? ` • ${data.info}` : '';
+    
+    // Using ID reference directly stops quotes from breaking the inline JS
+    return `
+    <div onclick="openReceiptModal('${data.id}')" class="sky-card p-4 rounded-2xl mb-3 flex items-center gap-4 cursor-pointer tap transition">
+        <div class="h-12 w-12 rounded-xl ${bgIcon} flex items-center justify-center text-lg">
+            <i class="fa-solid ${arrow}"></i>
+        </div>
+        <div class="flex-1 overflow-hidden">
+            <h3 class="text-sm font-black text-slate-800 dark:text-white truncate">${title}</h3>
+            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate">${shortDate}${extraInfo}</p>
+        </div>
+        <div class="text-right">
+            <h3 class="text-base font-black ${color}">${sign}₹${data.amount}</h3>
+            <p class="text-[8px] font-black ${statusColor} uppercase tracking-widest mt-1">${statusText}</p>
+        </div>
+    </div>`;
+}
+
+async function loadHistory() {
+    const listArea = document.getElementById('history-list');
+    listArea.innerHTML = `<p class="text-center text-xs text-sky-500 py-10 animate-pulse font-bold uppercase tracking-widest">Loading Records...</p>`;
+    
+    try {
+        let txns = await apiCall('HISTORY', { phone: currentUser.phone });
+        if(currentHistoryTab !== 'ALL') txns = txns.filter(t => t.type === currentHistoryTab);
+        
+        if(!txns || txns.length===0) {
+            listArea.innerHTML = `<div class="text-center py-10"><p class="text-xs text-slate-400 font-bold uppercase tracking-widest">No Records Found</p></div>`;
+            return;
+        }
+        
+        txns.sort((a, b) => b.timestamp - a.timestamp);
+        window.allTxns = txns; // Save globally for bug-free receipt clicks
+        listArea.innerHTML = txns.map(renderTxnHTML).join('');
+    } catch (e) { 
+        listArea.innerHTML = `<div class="text-center py-10"><p class="text-xs text-red-400 font-bold uppercase tracking-widest">Error Loading History</p></div>`;
+    }
+}
+
+function switchLifafaInputs() {
+    const t = document.getElementById('l-type').value;
+    document.getElementById('l-input-standard').style.display = t==='STANDARD' ? 'block' : 'none';
+    document.getElementById('l-input-scratch').style.display = t==='SCRATCH' ? 'grid' : 'none';
+    document.getElementById('l-input-toss').style.display = t==='TOSS' ? 'block' : 'none';
+}
+
+function toggleLifafaTab(tab) {
+    if(tab==='CREATE') {
+        document.getElementById('l-tab-create').className = "flex-1 bg-red-500 text-white font-bold py-3 px-2 rounded-xl text-[10px] transition tracking-widest uppercase";
+        document.getElementById('l-tab-list').className = "flex-1 text-slate-500 font-bold py-3 px-2 rounded-xl text-[10px] transition hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent tracking-widest uppercase";
+        document.getElementById('lifafa-create-sec').classList.remove('hidden');
+        document.getElementById('lifafa-list-sec').classList.add('hidden');
+    } else {
+        document.getElementById('l-tab-list').className = "flex-1 bg-red-500 text-white font-bold py-3 px-2 rounded-xl text-[10px] transition tracking-widest uppercase";
+        document.getElementById('l-tab-create').className = "flex-1 text-slate-500 font-bold py-3 px-2 rounded-xl text-[10px] transition hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent tracking-widest uppercase";
+        document.getElementById('lifafa-create-sec').classList.add('hidden');
+        document.getElementById('lifafa-list-sec').classList.remove('hidden');
+        loadMyLifafas();
+    }
+}
+
+function addTgInput() {
+    const container = document.getElementById('tg-inputs-container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'https://t.me/anotherchannel';
+    input.className = 'tg-link-input sky-input';
+    container.appendChild(input);
+}
+
+async function handleCreateLifafa() {
+    const tgInputs = document.querySelectorAll('.tg-link-input');
+    const tgLinks = [];
+    tgInputs.forEach(input => {
+        const val = input.value.trim();
+        if(val.startsWith("http")) tgLinks.push(val);
+    });
+
+    const code = document.getElementById('l-code').value.trim();
+    const type = document.getElementById('l-type').value;
+    const users = Number(document.getElementById('l-users').value);
+    
+    if(tgLinks.length === 0) return alert("Enter at least one valid Telegram Link starting with http/https");
+    if(!users || users < 1) return alert("Enter valid users limit");
+
+    let payload = { phone: currentUser.phone, type, telegramLinks: tgLinks, code, totalUsers: users };
+
+    if(type === 'STANDARD') {
+        payload.amount = Number(document.getElementById('l-std-amt').value);
+        if(!payload.amount || payload.amount<=0) return alert("Enter valid amount");
+    } else if(type === 'SCRATCH') {
+        payload.minAmount = Number(document.getElementById('l-scr-min').value);
+        payload.maxAmount = Number(document.getElementById('l-scr-max').value);
+        if(!payload.minAmount || !payload.maxAmount || payload.minAmount >= payload.maxAmount) return alert("Invalid Min/Max range");
+    } else if(type === 'TOSS') {
+        payload.amount = Number(document.getElementById('l-toss-amt').value);
+        payload.tossWin = document.getElementById('l-toss-win').value;
+        if(!payload.amount || payload.amount<=0) return alert("Enter valid amount");
+    }
+
+    loader(true);
+    try {
+        const lifafaId = await apiCall('CREATE_LIFAFA', payload);
+        const link = `${location.origin}/?id=${lifafaId}`;
+        document.getElementById('l-generated-link').classList.remove('hidden');
+        document.getElementById('l-link-text').href = link;
+        document.getElementById('l-link-text').innerText = link;
+        alert("Lifafa Created Successfully!");
+        startSync();
+    } catch(e) { alert(e.message); }
+    loader(false);
+}
+
+async function loadMyLifafas() {
+    const listSec = document.getElementById('lifafa-list-sec');
+    listSec.innerHTML = `<p class="text-center text-xs text-sky-500 py-10 font-bold uppercase tracking-widest animate-pulse">Loading...</p>`;
+    try {
+        const myL = await apiCall('MY_LIFAFAS', { phone: currentUser.phone });
+        if(!myL || myL.length === 0) {
+            listSec.innerHTML = `<p class="text-center text-xs text-slate-400 py-10 font-bold uppercase tracking-widest">No Lifafas Created</p>`;
+            return;
+        }
+        myL.sort((a,b)=>b.timestamp - a.timestamp);
+        let html = '';
+        myL.forEach(l => {
+            const link = `${location.origin}/?id=${l.id}`;
+            const statusBadge = l.isExpired ? `<span class="bg-red-50 text-red-600 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest">Expired</span>` : 
+                               (l.claimedUsers >= l.totalUsers ? `<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest">Completed</span>` : `<span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest">Active</span>`);
+            html += `
+            <div class="sky-card p-5 text-left">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-black text-slate-800 dark:text-white">${l.type} LIFAFA</span>
+                    ${statusBadge}
+                </div>
+                <div class="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-widest">Claims: <span class="text-sky-600">${l.claimedUsers}/${l.totalUsers}</span></div>
+                <div class="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-2.5 rounded-xl flex items-center justify-between">
+                    <span class="text-[9px] truncate w-3/4 font-mono text-slate-500">${link}</span>
+                    <button onclick="navigator.clipboard.writeText('${link}'); alert('Copied!');" class="text-sky-500 px-2 tap text-lg transition"><i class="fa-regular fa-copy"></i></button>
+                </div>
+            </div>`;
+        });
+        listSec.innerHTML = html;
+    } catch(e) { listSec.innerHTML = `<p class="text-center text-xs text-red-500">Error loading.</p>`; }
+}
+
+async function initLifafaClaim(id) {
+    showScreen('claim-lifafa-screen');
+    try {
+        const res = await apiCall('GET_LIFAFA_DETAILS', { id: id });
+        activeLifafaData = res;
+        activeLifafaData.id = id;
+        
+        document.getElementById('claim-type-desc').innerText = `Type: ${res.type} GIVEAWAY`;
+        document.getElementById('claim-steps-container').classList.remove('hidden');
+        if(res.hasCode) document.getElementById('claim-code-div').classList.remove('hidden');
+        
+        const btnContainer = document.getElementById('dynamic-tg-buttons');
+        btnContainer.innerHTML = '';
+        
+        const sessionKey = `joined_tg_${id}`;
+        let savedJoins = JSON.parse(sessionStorage.getItem(sessionKey) || "[]");
+        joinedTgIndices = new Set(savedJoins);
+
+        const links = res.telegramLinks || [];
+        
+        links.forEach((link, idx) => {
+            const isJoined = joinedTgIndices.has(idx);
+            
+            const btn = document.createElement('a');
+            btn.href = link;
+            btn.target = '_blank';
+            
+            if(isJoined) {
+                btn.className = 'w-full block text-center bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest shadow-md transition tap mb-2';
+                btn.innerText = `Joined Channel ${idx + 1} ✓`;
+            } else {
+                btn.className = 'w-full block text-center bg-sky-500 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest shadow-md transition tap mb-2 cursor-pointer';
+                btn.innerText = `Join Channel ${idx + 1}`;
+            }
+
+            btn.onclick = () => {
+                joinedTgIndices.add(idx);
+                sessionStorage.setItem(sessionKey, JSON.stringify(Array.from(joinedTgIndices))); 
+                
+                btn.classList.replace('bg-sky-500', 'bg-emerald-500');
+                btn.innerText = `Joined Channel ${idx + 1} ✓`;
+                
+                if(joinedTgIndices.size === links.length) tgJoined = true;
+            };
+            btnContainer.appendChild(btn);
+        });
+        
+        tgJoined = (joinedTgIndices.size === links.length);
+
+    } catch(e) {
+        document.getElementById('claim-type-desc').innerText = "ERROR";
+        document.getElementById('claim-type-desc').className = "text-[10px] text-white bg-red-500 font-bold mt-2 mb-6 py-1.5 px-4 rounded-full inline-block tracking-widest uppercase";
+        document.getElementById('claim-result-container').classList.remove('hidden');
+        document.getElementById('claim-result-msg').innerText = e.message;
+        document.getElementById('claim-result-msg').className = "text-xl font-black text-red-500";
+    }
+}
+
+function proceedLifafaClaim() {
+    const reqLinks = activeLifafaData.telegramLinks ? activeLifafaData.telegramLinks.length : 0;
+    if(joinedTgIndices.size < reqLinks && reqLinks > 0) return alert("Please join all Telegram channels first!");
+    
+    const phone = document.getElementById('claim-phone').value.trim();
+    if(phone.length !== 10) return alert("Enter valid 10-digit mobile!");
+    if(activeLifafaData.hasCode && !document.getElementById('claim-code').value.trim()) return alert("Enter unique code!");
+
+    document.getElementById('claim-steps-container').classList.add('hidden');
+    document.getElementById('claim-game-container').classList.remove('hidden');
+
+    if(activeLifafaData.type === 'STANDARD') {
+        executeFinalClaim();
+    } else if(activeLifafaData.type === 'SCRATCH') {
+        document.getElementById('game-scratch').classList.remove('hidden');
+    } else if(activeLifafaData.type === 'TOSS') {
+        document.getElementById('game-toss').classList.remove('hidden');
+    }
+}
+
+function playTossGame() {
+    const coin = document.getElementById('coin-ui');
+    coin.classList.add('coin-toss-anim');
+    setTimeout(() => {
+        executeFinalClaim();
+    }, 2000);
+}
+
+async function executeFinalClaim() {
+    loader(true);
+    const phone = document.getElementById('claim-phone').value.trim();
+    const code = document.getElementById('claim-code').value.trim();
+    
+    try {
+        const result = await apiCall('CLAIM_LIFAFA', { id: activeLifafaData.id, phone: phone, code: code });
+        
+        document.getElementById('claim-game-container').classList.add('hidden');
+        document.getElementById('claim-result-container').classList.remove('hidden');
+
+        if(result.success && result.amount > 0) {
+            document.getElementById('claim-result-msg').innerText = "Congratulations!";
+            document.getElementById('claim-result-amt').classList.remove('hidden');
+            document.getElementById('claim-result-amt').innerText = `+₹${result.amount}`;
+            
+            if(currentUser && (currentUser.phone === phone || currentUser.phone === "+91"+phone)) { startSync(); }
+        } else {
+            document.getElementById('claim-result-msg').innerText = "Hard Luck! Try next time.";
+            document.getElementById('claim-result-msg').className = "text-2xl font-black text-red-500";
+        }
+    } catch(e) {
+        document.getElementById('claim-game-container').classList.add('hidden');
+        document.getElementById('claim-result-container').classList.remove('hidden');
+        document.getElementById('claim-result-msg').innerText = e.message;
+        document.getElementById('claim-result-msg').className = "text-lg font-black text-red-500 mt-4";
+    }
+    loader(false);
+}
+
+window.onload = () => {
+    let u = localStorage.getItem('ultra_user');
+    if(u) currentUser = JSON.parse(u);
+    
+    if(currentUser) {
+        document.getElementById('dash-user-name').innerText = currentUser.name || 'User';
+        document.getElementById('dash-profile-pic').src = `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name || 'User'}&backgroundColor=0ea5e9&textColor=ffffff`;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const lifafaId = urlParams.get('id');
+
+    // Display splash screen logic
+    setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if(splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => { splash.style.display = 'none'; }, 500); // fade out duration
+        }
+    }, 1500);
+
+    if (lifafaId) {
+        initLifafaClaim(lifafaId);
+    } else {
+        if(currentUser) { 
+            showScreen('main-dashboard'); 
+            startSync(); 
+        } else { 
+            showScreen('auth-screen'); 
+        }
+    }
+};
+
+// ADMIN PANEL FUNCTIONS
+async function handleAdminLogin() {
+    const phone = document.getElementById('admin-phone').value.trim();
+    const password = document.getElementById('admin-pass').value.trim();
+    
+    if (!phone || !password) return showToast("Please enter admin credentials");
+    
+    loader(true);
+    try {
+        const result = await apiCall('ADMIN_LOGIN', { phone, password });
+        if (result && result.role === "admin") {
+            currentAdminPhone = phone;
+            currentAdminPassword = password;
+            await loadAdminData();
+            showScreen('admin-panel-screen');
+            showToast("Admin logged in successfully");
+        }
+    } catch (e) {
+        showToast(e.message || "Invalid admin credentials");
+    } finally {
+        loader(false);
+    }
+}
+
+async function loadAdminData() {
+    try {
+        const result = await apiCall('GET_ADMIN_DATA', { 
+            phone: currentAdminPhone, 
+            password: currentAdminPassword 
+        });
+        
+        const deposits = result.deposits || [];
+        const withdrawals = result.withdrawals || [];
+        
+        // Render deposits
+        const depList = document.getElementById('deposits-list');
+        if (deposits.length === 0) {
+            depList.innerHTML = '<p class="text-sm text-slate-500 text-center py-8">No pending deposits</p>';
+        } else {
+            depList.innerHTML = deposits.filter(d => d.status === 'PENDING').map(d => `
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-xs font-bold text-slate-600">TXN ID: ${d.id}</p>
+                            <p class="text-sm font-black text-slate-900">₹${d.amount}</p>
+                            <p class="text-xs text-slate-500 mt-1">From: ${d.userPhone} (${d.userName})</p>
+                            <p class="text-xs text-slate-500">UTR: ${d.utr}</p>
+                        </div>
+                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full">${d.status}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="updateDepositStatus('${d.id}', 'APPROVED')" class="flex-1 bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs tap">✓ Approve</button>
+                        <button onclick="updateDepositStatus('${d.id}', 'REJECTED')" class="flex-1 bg-red-500 text-white font-bold py-2 rounded-lg text-xs tap">✕ Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Render withdrawals
+        const withList = document.getElementById('withdrawals-list');
+        if (withdrawals.length === 0) {
+            withList.innerHTML = '<p class="text-sm text-slate-500 text-center py-8">No pending withdrawals</p>';
+        } else {
+            withList.innerHTML = withdrawals.filter(w => w.status === 'PENDING').map(w => `
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-xs font-bold text-slate-600">TXN ID: ${w.id}</p>
+                            <p class="text-sm font-black text-slate-900">₹${w.amount}</p>
+                            <p class="text-xs text-slate-500 mt-1">From: ${w.userPhone} (${w.userName})</p>
+                            <p class="text-xs text-slate-500">UPI: ${w.upi}</p>
+                        </div>
+                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full">${w.status}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="updateWithdrawalStatus('${w.id}', 'SUCCESS')" class="flex-1 bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs tap">✓ Approve</button>
+                        <button onclick="updateWithdrawalStatus('${w.id}', 'REJECTED')" class="flex-1 bg-red-500 text-white font-bold py-2 rounded-lg text-xs tap">✕ Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        showToast(e.message || "Failed to load admin data");
+    }
+}
+
+async function updateDepositStatus(txnId, status) {
+    loader(true);
+    try {
+        await apiCall('UPDATE_DEPOSIT_STATUS', {
+            txnId,
+            status,
+            adminPhone: currentAdminPhone,
+            adminPassword: currentAdminPassword
+        });
+        showToast(`Deposit ${status === 'APPROVED' ? 'approved' : 'rejected'}`);
+        await loadAdminData();
+    } catch (e) {
+        showToast(e.message || "Failed to update");
+    } finally {
+        loader(false);
+    }
+}
+
+async function updateWithdrawalStatus(txnId, status) {
+    loader(true);
+    try {
+        await apiCall('UPDATE_WITHDRAWAL_STATUS', {
+            txnId,
+            status,
+            adminPhone: currentAdminPhone,
+            adminPassword: currentAdminPassword
+        });
+        showToast(`Withdrawal ${status === 'SUCCESS' ? 'approved' : 'rejected'}`);
+        await loadAdminData();
+    } catch (e) {
+        showToast(e.message || "Failed to update");
+    } finally {
+        loader(false);
+    }
+}
+
+function handleAdminLogout() {
+    currentAdminPhone = null;
+    currentAdminPassword = null;
+    showScreen('auth-screen');
+    showToast("Admin logged out");
+}
+
+let currentAdminPhone = null;
+let currentAdminPassword = null;
+</script>
+</body>
+</html>
